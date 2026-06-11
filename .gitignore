@@ -1,0 +1,4 @@
+*.mp3
+.gstack/
+.claude/
+.DS_Store
