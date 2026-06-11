@@ -16,6 +16,7 @@ Open `index.html` in any modern browser. That's it.
 | Hold `SPACE`, release | Plunger (power by hold time) |
 | `ENTER` / `R` | New game (after game over) |
 | `M` | Music on/off |
+| `E` | Easy mode — closes the outlanes (also a button above the table) |
 | Touch | Left/right half of screen = flippers |
 
 ## The machine
@@ -35,7 +36,8 @@ Theme: **drive I-75 to the big game in Detroit.** Lions, Tigers, Red Wings, Pist
   multiplier (to 5x, shown on the tachometer needle). Resets every ball.
 - **Pit Stop saucer** — locks balls when lit; otherwise 2,500 + lights the
   one-shot outlane **KICKBACK**.
-- **Outlanes** — yes, you can drain there. That's pinball.
+- **Outlanes** — yes, you can drain there. That's pinball. (Too mean? `E` toggles
+  easy mode: gold rails seal both outlanes. Saved between sessions.)
 - **End-of-ball bonus** — bumpers, 313s, and ramps tally up × your multiplier.
 
 ## Music

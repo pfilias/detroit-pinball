@@ -18,7 +18,8 @@
 <body>
 <div id="wrap">
   <h1><span class="b">Detroit</span> Motor City <span class="o">Pinball</span></h1>
-  <p id="hint">&larr; / Z = left flipper &nbsp;&bull;&nbsp; &rarr; / "/" = right flipper &nbsp;&bull;&nbsp; hold SPACE = launch &nbsp;&bull;&nbsp; ENTER = new game &nbsp;&bull;&nbsp; M = music</p>
+  <p id="hint">&larr; / Z = left flipper &nbsp;&bull;&nbsp; &rarr; / "/" = right flipper &nbsp;&bull;&nbsp; hold SPACE = launch &nbsp;&bull;&nbsp; ENTER = new game &nbsp;&bull;&nbsp; M = music &nbsp;&bull;&nbsp; E = easy mode &nbsp;
+  <button id="easyBtn" style="font-size:11px;padding:2px 10px;border-radius:10px;border:1px solid #3a4d6b;background:#0d1626;color:#7d8aa0;cursor:pointer;">OUTLANES: OPEN (PRO)</button></p>
   <canvas id="c" width="520" height="990"></canvas>
 </div>
 <button id="launchBtn">HOLD TO LAUNCH</button>
@@ -157,6 +158,10 @@ seg(460,200, 460,770);               // plunger lane inner wall = right outlane 
 // right outlane: open channel x410-460 -> drain
 seg(410,640, 410,700);               // inlane divider
 seg(410,700, 355,730);               // inlane guide -> meets flipper pivot (no pocket)
+// easy-mode rails: seal both outlane mouths, deflecting balls into the inlanes.
+// Only collide/draw when easyMode is on.
+seg(20,632, 70,640,  {easy:true});
+seg(460,632, 410,640, {easy:true});
 seg(500,250, 500,770);               // outer right wall
 seg(458,770, 502,770, {e:0.2});      // lane floor (plunger seat)
 // dome arc: center (260,250) r=240, from right (theta 0) to left (theta PI)
@@ -264,6 +269,14 @@ let bumperHits = 0, count313 = 0, rampsThisBall = 0;  // end-of-ball bonus units
 let bonusAnim = null;         // {total, t} drain ceremony
 let skillLane = -1, skillTimer = 0;        // skill shot
 let exitFlash = 0;            // EXIT 50 sign flash on ramp completion
+let easyMode = localStorage.getItem('detroitPinballEasy') === '1';
+function toggleEasy(){
+  easyMode = !easyMode;
+  localStorage.setItem('detroitPinballEasy', easyMode ? '1' : '0');
+  setMsg(easyMode ? 'EASY MODE — OUTLANES CLOSED' : 'PRO MODE — OUTLANES OPEN');
+  const eb = document.getElementById('easyBtn');
+  if(eb) eb.textContent = 'OUTLANES: ' + (easyMode ? 'CLOSED (EASY)' : 'OPEN (PRO)');
+}
 
 function mkBall(x, y, state){
   return {x, y, vx:0, vy:0, r:BALL_R, state:state||'free', trail:[], still:0, capT:0, rampD:0};
@@ -571,7 +584,7 @@ function step(){
       clampV(b);
       b.x += b.vx/SUB;
       b.y += b.vy/SUB;
-      for(const s of walls) collideWall(b, s);
+      for(const s of walls){ if(s.easy && !easyMode) continue; collideWall(b, s); }
       for(const bp of bumpers) collideBumper(b, bp);
       for(const t of targets) collideTarget(b, t);
       const k = (i+1)/SUB;
@@ -770,6 +783,7 @@ window.addEventListener('keydown', e=>{
     case 'Space': case 'ArrowDown': startCharge(); e.preventDefault(); break;
     case 'Enter': case 'KeyR': if(gameOver) newGame(); break;
     case 'KeyM': initAudio(); toggleMusic(); break;
+    case 'KeyE': toggleEasy(); break;
   }
 });
 window.addEventListener('keyup', e=>{
@@ -943,7 +957,7 @@ mural.width = W; mural.height = H;
   // pinstriping: orange echo inset from every wall
   m.strokeStyle = 'rgba(250,70,22,0.35)'; m.lineWidth = 1;
   for(const sgm of walls){
-    if(sgm.sling) continue;
+    if(sgm.sling || sgm.easy) continue;
     const dx=sgm.x2-sgm.x1, dy=sgm.y2-sgm.y1, L=Math.hypot(dx,dy);
     if(L < 4) continue;
     let nx=-dy/L, ny=dx/L;
@@ -1089,10 +1103,20 @@ function draw(){
   ctx.lineCap = 'round';
   ctx.beginPath();
   for(const s of walls){
-    if(s.sling) continue;
+    if(s.sling || s.easy) continue;
     ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2);
   }
   ctx.stroke();
+  if(easyMode){
+    ctx.strokeStyle = '#ffd966';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    for(const s of walls){
+      if(!s.easy) continue;
+      ctx.moveTo(s.x1,s.y1); ctx.lineTo(s.x2,s.y2);
+    }
+    ctx.stroke();
+  }
 
   // slingshot triangles
   ctx.fillStyle = '#C8102E';
@@ -1395,6 +1419,10 @@ function frame(t){
   draw();
   requestAnimationFrame(frame);
 }
+const easyBtn = document.getElementById('easyBtn');
+easyBtn.addEventListener('click', ()=>{ initAudio(); toggleEasy(); });
+if(easyMode) easyBtn.textContent = 'OUTLANES: CLOSED (EASY)';
+
 updateLaunchBtn();
 requestAnimationFrame(frame);
 
